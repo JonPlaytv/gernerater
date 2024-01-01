@@ -13,12 +13,12 @@ def index():
 def generate():
     # Get user input from the request using request.form.get
     user_text = request.form.get('user_text', '')
-
+    userwith = 2000
     try:
         # Make a request to your FastAPI endpoint
         response = requests.post(
             'http://37.60.173.43:8080/sdapi/v1/txt2img',
-            json={'prompt': user_text, 'negative_prompt': 'nsfw'}
+            json={'prompt': user_text, 'negative_prompt': 'nsfw', 'width': userwith}
         )
         response.raise_for_status()  # Raise an error for HTTP errors
 
