@@ -37,6 +37,12 @@
             resize: vertical; /* Allow vertical resizing */
         }
 
+        .form-control-small {
+            width: 100%; /* Adjusted width for the smaller input box */
+            padding: 15px; /* Adjusted padding for consistency */
+            box-sizing: border-box;
+        }
+
         .btn-primary {
             width: 100%;
             padding: 15px; /* Adjusted padding for the button */
@@ -80,6 +86,16 @@
                 <textarea class="form-control form-control-large" id="negative-prompt" name="negative_prompt"></textarea>
             </div>
 
+            <div class="form-group">
+                <label for="width">Width:</label>
+                <input type="number" class="form-control form-control-small" id="width" name="width" min="0" max="5000" value="512">
+            </div>
+
+            <div class="form-group">
+                <label for="height">Height:</label>
+                <input type="number" class="form-control form-control-small" id="height" name="height" min="0" max="5000" value="512">
+            </div>
+
             <button type="button" class="btn btn-primary" onclick="generateImage()">Generate Image</button>
         </form>
 
@@ -102,69 +118,79 @@
         </div>
     </div>
 
-    <script>
-        const userTextInput = document.getElementById('user-text');
-        const negativePromptInput = document.getElementById('negative-prompt');
+   <script>
+    const userTextInput = document.getElementById('user-text');
+    const negativePromptInput = document.getElementById('negative-prompt');
+    const widthInput = document.getElementById('width');
+    const heightInput = document.getElementById('height');
 
-        async function generateImage() {
-            const userText = userTextInput.value;
-            const negativePrompt = negativePromptInput.value;
+    async function generateImage() {
+        const userText = userTextInput.value;
+        const negativePrompt = negativePromptInput.value;
+        const width = widthInput.value;
+        const height = heightInput.value;
 
-            document.getElementById('loading-spinner').style.display = 'block';
+        document.getElementById('loading-spinner').style.display = 'block';
 
-            try {
-                // Prepare the request body
-                const requestBody = {
-                    prompt: userText,
-                    negative_prompt: negativePrompt,
-                    // Add other parameters as needed
-                };
+        try {
+            // Prepare the request body
+            const requestBody = {
+                prompt: userText,
+                negative_prompt: negativePrompt,
+                width: parseInt(width),
+                height: parseInt(height),
+                // Add other parameters as needed
+            };
 
-                // Send the request to the server for image generation
-                const response = await fetch('/generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(requestBody),
-                });
+            // Send the request to the server for image generation
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody),
+            });
 
-                const result = await response.json();
-                document.getElementById('generated-image').src = `data:image/png;base64,${result.base64_image}`;
-                document.getElementById('result-container').style.display = 'block';
-            } finally {
-                document.getElementById('loading-spinner').style.display = 'none';
-            }
+            const result = await response.json();
+            document.getElementById('generated-image').src = `data:image/png;base64,${result.images[0]}`;
+            document.getElementById('result-container').style.display = 'block';
+        } finally {
+            document.getElementById('loading-spinner').style.display = 'none';
         }
+    }
 
-        // Function to fetch queue status and update progress bar
-        async function fetchQueueStatus() {
-            try {
-                const response = await fetch('http://37.60.173.43:8080/queue/status', {
-                    method: 'GET',
-                    headers: {
-                        'Accept': 'application/json',
-                    },
-                });
+    // Function to fetch queue status and update progress bar
+    async function fetchQueueStatus() {
+        try {
+            const response = await fetch('http://37.60.173.43:8080/queue/status', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                },
+            });
 
-                const queueStatus = await response.json();
+            const queueStatus = await response.json();
+            
+            if (queueStatus.rank !== null) {
                 const progress = queueStatus.rank / queueStatus.queue_size * 100;
-
                 updateQueueProgress(progress);
-            } catch (error) {
-                console.error('Error fetching queue status:', error);
+            } else {
+                console.log('Queue status not available.');
             }
+        } catch (error) {
+            console.error('Error fetching queue status:', error);
         }
+    }
 
-        // Update queue progress every 5 seconds (adjust as needed)
-        setInterval(fetchQueueStatus, 1000);
+    // Update queue progress every 5 seconds (adjust as needed)
+    setInterval(fetchQueueStatus, 1000);
 
-        // Function to update the queue progress bar
-        function updateQueueProgress(progress) {
-            const progressBar = document.getElementById('queue-progress-bar');
-            progressBar.style.width = `${progress}%`;
-            progressBar.setAttribute('aria-valuenow', progress);
-        }
-    </script>
+    // Function to update the queue progress bar
+    function updateQueueProgress(progress) {
+        const progressBar = document.getElementById('queue-progress-bar');
+        progressBar.style.width = `${progress}%`;
+        progressBar.setAttribute('aria-valuenow', progress);
+    }
+</script>
 
-    <script src="https://code.jquery.com
+      
