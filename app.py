@@ -1,48 +1,45 @@
-from fastapi import FastAPI, Request, Depends, HTTPException, status
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-from fastapi.middleware.cors import CORSMiddleware
+from flask import Flask, render_template, request, jsonify, send_from_directory
 import requests
-app = FastAPI()
 
-# Enable CORS (Cross-Origin Resource Sharing) to allow requests from the frontend
-origins = ["*"]  # Update this list with the appropriate origins
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+app = Flask(__name__)
 
-@app.post("/generate")
-async def generate(request: Request):
-    try:
-        # Extract data from the request body
-        data = await request.json()
-        user_text = data.get('prompt')
-        width = data.get('width')
-        height = data.get('height')
-        negative_prompt = data.get('negative_prompt')  # Added line for negative prompt
+# Define a route to serve the favicon.ico file
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory('static', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
-        # Make a request to your external server for image generation
-        # Replace the URL with the actual URL of your external server
-        # Update the payload structure as needed
-        response = requests.post('http://37.60.173.43:8080/sdapi/v1/txt2img', json={
-            'text': user_text,
-            'width': width,
-            'height': height,
-            'negative_prompt': negative_prompt  # Added line for negative prompt
-        })
+@app.route('/')
+def index():
+    return render_template('index.html')
 
-        # Assume the API responds with an image encoded in base64
-        base64_image = response.json().get('images')
+@app.route('/generate', methods=['POST'])
+def generate():
+    # Get user input from the request
+    user_text = request.json.get('prompt')
+    width = request.json.get('width')
+    height = request.json.get('height')
+    negative_prompt = request.json.get('negative_prompt')  # Added line for negative prompt
 
-        return JSONResponse(content=jsonable_encoder({'images': base64_image}))
-    except Exception as e:
-        return JSONResponse(content=jsonable_encoder({'error': str(e)}), status_code=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    # Make a request to your FastAPI endpoint
+    response = requests.post('http://37.60.173.43:8080/sdapi/v1/txt2img', json={
+        'text': user_text,
+        'width': width,
+        'height': height,
+        'negative_prompt': negative_prompt  # Added line for negative prompt
+    })
 
-if __name__ == "__main__":
-    import uvicorn
+    # Assume the API responds with an image encoded in base64
+    base64_image = response.json().get('images')
 
-  
+    return jsonify({'images': base64_image})
+
+@app.route('/queue/status')
+def queue_status():
+    # Make a request to the external server for queue status
+    response = requests.get('http://37.60.173.43:8080/queue/status')
+
+    # Return the response from the external server
+    return jsonify(response.json())
+
+if __name__ == '__main__':
+    app.run(debug=True)
