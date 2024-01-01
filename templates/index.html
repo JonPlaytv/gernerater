@@ -113,53 +113,53 @@
         heightValueInput.value = heightInput.value;
     }
 
-       async function generateImage() {
-        const userText = userTextInput.value;
-        const width = widthInput.value;
-        const height = heightInput.value;
+   async function generateImage() {
+    const userText = userTextInput.value;
+    const width = widthInput.value;
+    const height = heightInput.value;
 
-        document.getElementById('loading-spinner').style.display = 'block';
+    document.getElementById('loading-spinner').style.display = 'block';
 
-        try {
-            // Prepare the request body with updated resolution
-            const requestBody = {
-                prompt: userText,
-                width: parseInt(width),
-                height: parseInt(height),
-                // Include other parameters from your request body as needed
-                // styles: ["string"],
-                // seed: -1,
-                // Add more parameters here...
-            };
+    try {
+        // Prepare the request body with updated resolution
+        const requestBody = {
+            prompt: userText,
+            width: parseInt(width),
+            height: parseInt(height),
+            // Include other parameters from your request body as needed
+            // styles: ["string"],
+            // seed: -1,
+            // Add more parameters here...
+        };
 
-            // Send the request to the server for image generation
-            const response = await fetch('/generate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(requestBody),
-            });
+        // Send the request to the server for image generation
+        const response = await fetch('/generate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestBody),
+        });
 
-            const result = await response.json();
+        const result = await response.json();
 
-            // Ensure the 'images' key exists in the response
-            if ('images' in result && result.images) {
-                const generatedImage = document.getElementById('generated-image');
-                // Use the image directly under the 'images' key
-                const base64Image = result.images;
+        // Ensure the 'images' key exists in the response
+        if ('images' in result && result.images) {
+            const generatedImage = document.getElementById('generated-image');
+            // Use the image directly under the 'images' key
+            const base64Image = result.images;
 
-                // Set the 'src' attribute of the image
-                generatedImage.src = `data:image/png;base64,${base64Image}`;
-                // Show the image container
-                document.getElementById('result-container').style.display = 'block';
-            } else {
-                console.error('Invalid response format:', result);
-            }
-        } finally {
-            document.getElementById('loading-spinner').style.display = 'none';
+            // Set the 'src' attribute of the image
+            generatedImage.src = `data:image/png;base64,${base64Image}`;
+            // Show the image container
+            document.getElementById('result-container').style.display = 'block';
+        } else {
+            console.error('Invalid response format:', result);
         }
+    } finally {
+        document.getElementById('loading-spinner').style.display = 'none';
     }
+}
 
     
 
