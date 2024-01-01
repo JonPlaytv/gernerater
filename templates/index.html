@@ -124,7 +124,12 @@
             });
 
             const result = await response.json();
-            document.getElementById('generated-image').src = `data:image/png;base64,${result.base64_image}`;
+            const generatedImage = document.getElementById('generated-image');
+
+            // Set the 'src' attribute of the image
+            generatedImage.src = `data:image/png;base64,${result.base64_image}`;
+            // Show the image container
+            document.getElementById('result-container').style.display = 'block';
         } finally {
             document.getElementById('loading-spinner').style.display = 'none';
         }
