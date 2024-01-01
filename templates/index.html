@@ -97,6 +97,9 @@
             </div>
 
             <button type="button" class="btn btn-primary" onclick="generateImage()">Generate Image</button>
+            
+           
+
         </form>
 
         <div id="loading-spinner" style="display: none;">
@@ -181,6 +184,8 @@
             console.error('Error fetching queue status:', error);
         }
     }
+
+
 
     // Update queue progress every 5 seconds (adjust as needed)
     setInterval(fetchQueueStatus, 1000);
