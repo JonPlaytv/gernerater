@@ -1,5 +1,3 @@
-# app.py
-
 from flask import Flask, render_template, request, jsonify
 import requests
 
@@ -11,29 +9,33 @@ def index():
 
 @app.route('/generate', methods=['POST'])
 def generate():
-    # Get user input from the request using request.form.get
-    user_text = request.form.get('user_text', '')
+    # Get user input from the request
+    user_text = request.json.get('prompt')
+    width = request.json.get('width')
+    height = request.json.get('height')
+    negative_prompt = request.json.get('negative_prompt')  # Added line for negative prompt
 
-    try:
-        # Make a request to your FastAPI endpoint
-        response = requests.post(
-            'http://37.60.173.43:8080/sdapi/v1/txt2img',
-            json={'prompt': user_text, 'negative_prompt': 'nsfw'}
-        )
-        response.raise_for_status()  # Raise an error for HTTP errors
+    # Make a request to your FastAPI endpoint
+    response = requests.post('http://37.60.173.43:8080/sdapi/v1/txt2img', json={
+        'text': user_text,
+        'width': width,
+        'height': height,
+        'negative_prompt': negative_prompt  # Added line for negative prompt
+    })
 
-        # Assume the API responds with an image encoded in base64 under "images" field
-        base64_image = response.json().get('images', [])[0]  # Assuming it's a list
+    # Assume the API responds with an image encoded in base64
+    base64_image = response.json().get('images')
 
-        # Print the base64 string
-        print(f"Received Base64 Image: {base64_image}")
+    return jsonify({'images': base64_image})
 
-        return jsonify({'base64_image': base64_image})
 
-    except Exception as e:
-        # Log or print the error
-        print(f"Error generating image: {e}")
-        return jsonify({'error': str(e)}), 500
+@app.route('/queue/status')
+def queue_status():
+    # Make a request to the external server for queue status
+    response = requests.get('http://37.60.173.43:8080/queue/status')
+
+    # Return the response from the external server
+    return jsonify(response.json())
 
 if __name__ == '__main__':
     app.run(debug=True)
