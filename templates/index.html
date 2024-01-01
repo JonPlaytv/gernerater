@@ -7,30 +7,48 @@
     <title>Text to Image Generator</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        @media (prefers-color-scheme: dark) {
-            /* Dark mode styles go here */
-            body {
-                background-color: #343a40;
-                color: #fff;
-            }
+    @media (prefers-color-scheme: dark) {
+        /* Dark mode styles go here */
+        body {
+            background-color: #343a40;
+            color: #fff;
         }
+    }
 
-        .form-group {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-        }
+    .form-group {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
 
-        .form-control-small {
-            width: 60px; /* Adjust the width as needed */
-            margin-left: 10px;
-        }
+    .form-control-small {
+        width: 60px; /* Adjust the width as needed */
+        margin-left: 10px;
+    }
 
-        .custom-input {
-            width: 80px; /* Adjust the width as needed */
-            margin-left: 10px;
-        }
-    </style>
+    .custom-input {
+        width: 80px; /* Adjust the width as needed */
+        margin-left: 10px;
+    }
+
+    #loading-spinner {
+        display: none;
+    }
+
+    #result-container {
+        display: none;
+        margin-top: 20px; /* Adjust the margin as needed */
+    }
+
+    #generated-image {
+        max-width: 100%;
+        height: auto;
+    }
+
+    #queue-progress-bar {
+        background-color: #007bff; /* Adjust the progress bar color */
+    }
+</style>
 </head>
 
 <body>
@@ -95,7 +113,7 @@
         heightValueInput.value = heightInput.value;
     }
 
-    async function generateImage() {
+       async function generateImage() {
         const userText = userTextInput.value;
         const width = widthInput.value;
         const height = heightInput.value;
@@ -124,35 +142,46 @@
             });
 
             const result = await response.json();
-            const generatedImage = document.getElementById('generated-image');
 
-            // Set the 'src' attribute of the image
-            generatedImage.src = `data:image/png;base64,${result.base64_image}`;
-            // Show the image container
-            document.getElementById('result-container').style.display = 'block';
+            // Ensure the 'images' key exists in the response
+            if ('images' in result && result.images) {
+                const generatedImage = document.getElementById('generated-image');
+                // Use the image directly under the 'images' key
+                const base64Image = result.images;
+
+                // Set the 'src' attribute of the image
+                generatedImage.src = `data:image/png;base64,${base64Image}`;
+                // Show the image container
+                document.getElementById('result-container').style.display = 'block';
+            } else {
+                console.error('Invalid response format:', result);
+            }
         } finally {
             document.getElementById('loading-spinner').style.display = 'none';
         }
     }
 
+    
+
     // Function to fetch queue status and update progress bar
-    async function fetchQueueStatus() {
-        try {
-            const response = await fetch('http://37.60.173.43:8080/queue/status', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                },
-            });
+  async function fetchQueueStatus() {
+    try {
+        const response = await fetch('/queue/status', {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+        });
 
-            const queueStatus = await response.json();
-            const progress = queueStatus.rank / queueStatus.queue_size * 100;
+        const queueStatus = await response.json();
+        const progress = queueStatus.rank / queueStatus.queue_size * 100;
 
-            updateQueueProgress(progress);
-        } catch (error) {
-            console.error('Error fetching queue status:', error);
-        }
+        updateQueueProgress(progress);
+    } catch (error) {
+        console.error('Error fetching queue status:', error);
     }
+}
+
 
     // Update queue progress every 5 seconds (adjust as needed)
     setInterval(fetchQueueStatus, 1000);
